@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\SalaryController;
+use App\Http\Controllers\Api\WechatController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -7,13 +9,17 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+// 微信授权（无需鉴权）
+Route::get('/wechat/oauth', [WechatController::class, 'oauth']);
+Route::get('/wechat/callback', [WechatController::class, 'callback']);
+
+// 绑定员工（无需鉴权）
+Route::post('/h5/bind', [WechatController::class, 'bind']);
+
+// 工资查询（需要 Sanctum 鉴权）
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/salaries', [SalaryController::class, 'index']);
+    Route::get('/salaries/{month}', [SalaryController::class, 'show']);
 });
