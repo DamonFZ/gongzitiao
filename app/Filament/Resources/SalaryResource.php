@@ -23,7 +23,52 @@ class SalaryResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Forms\Components\Select::make('employee_id')
+                    ->relationship('employee', 'name')
+                    ->required()
+                    ->label('员工'),
+                Forms\Components\TextInput::make('month')
+                    ->required()
+                    ->label('月份(如2026-06)')
+                    ->maxLength(7),
+                Forms\Components\TextInput::make('department')
+                    ->label('部门')
+                    ->maxLength(255),
+                Forms\Components\TextInput::make('position')
+                    ->label('职位')
+                    ->maxLength(255),
+                Forms\Components\TextInput::make('base_salary')
+                    ->label('基本工资')
+                    ->numeric()
+                    ->required(),
+                Forms\Components\TextInput::make('position_allowance')
+                    ->label('岗位津贴')
+                    ->numeric()
+                    ->required(),
+                Forms\Components\TextInput::make('overtime_pay')
+                    ->label('加班费')
+                    ->numeric(),
+                Forms\Components\TextInput::make('leave_days')
+                    ->label('请假天数')
+                    ->numeric(),
+                Forms\Components\TextInput::make('deducted_leave_pay')
+                    ->label('扣除请假工资')
+                    ->numeric(),
+                Forms\Components\TextInput::make('payable_salary')
+                    ->label('应发工资')
+                    ->numeric()
+                    ->required(),
+                Forms\Components\TextInput::make('social_security')
+                    ->label('社保')
+                    ->numeric()
+                    ->required(),
+                Forms\Components\TextInput::make('income_tax')
+                    ->label('个税')
+                    ->numeric(),
+                Forms\Components\TextInput::make('net_salary')
+                    ->label('实发工资')
+                    ->numeric()
+                    ->required(),
             ]);
     }
 
