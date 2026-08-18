@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\SalaryResource\Pages;
 
+use App\Filament\Actions\ImportSalaryAction;
 use App\Filament\Resources\SalaryResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
@@ -14,6 +15,7 @@ class ListSalaries extends ListRecords
     {
         return [
             Actions\CreateAction::make(),
+            ImportSalaryAction::make(),
         ];
     }
 }
