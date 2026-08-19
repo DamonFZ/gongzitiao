@@ -58,10 +58,18 @@ class EmployeeResource extends Resource
                         }
                         return $state;
                     }),
+                Tables\Columns\TextColumn::make('openid')
+                    ->label('OpenID')
+                    ->formatStateUsing(function ($state) {
+                        if (empty($state)) {
+                            return '-';
+                        }
+                        return substr($state, 0, 4) . '****';
+                    }),
                 Tables\Columns\IconColumn::make('is_wechat_bound')
                     ->label('已绑定微信')
                     ->boolean()
-                    ->state(fn ($record): bool => !empty($record->openid)),
+                    ->getStateUsing(fn ($record) => !empty($record->openid)),
             ])
             ->filters([
                 //
