@@ -16,20 +16,10 @@ class WechatController extends Controller
      */
     public function oauth(Request $request)
     {
-        Log::info('=== WechatController@oauth 被调用 ===');
-
         $appId = config('wechat.official_account.app_id');
         $secret = config('wechat.official_account.secret');
-        $callbackUrl = url('/wechat/callback');
-
-        Log::info('微信 OAuth 配置', [
-            'app_id' => $appId,
-            'secret' => $secret,
-            'callback' => $callbackUrl,
-        ]);
 
         if (!$appId || !$secret) {
-            Log::error('微信配置缺失');
             return '微信公众号配置缺失，请在 .env 中配置 WECHAT_OFFICIAL_ACCOUNT_APP_ID 和 WECHAT_OFFICIAL_ACCOUNT_SECRET';
         }
 
@@ -38,16 +28,17 @@ class WechatController extends Controller
             'secret' => $secret,
             'oauth' => [
                 'scopes' => ['snsapi_base'],
-                'callback' => $callbackUrl,
+                'callback' => url('/wechat/callback'),
             ],
         ];
 
         $app = new Application($config);
         $oauth = $app->getOAuth();
 
-        Log::info('准备跳转到微信授权页');
+        // EasyWeChat v6 的 redirect() 返回 URL 字符串，需要用 redirect()->away() 包装
+        $url = $oauth->redirect();
 
-        return $oauth->redirect();
+        return redirect()->away($url);
     }
 
     /**
@@ -58,7 +49,6 @@ class WechatController extends Controller
         $code = $request->input('code');
 
         if (!$code) {
-            Log::error('微信授权回调缺少 code 参数');
             return redirect()->route('h5.bind')->withErrors(['msg' => '微信授权失败，缺少授权码']);
         }
 
@@ -75,12 +65,11 @@ class WechatController extends Controller
         $oauth = $app->getOAuth();
 
         try {
+            // EasyWeChat v6 使用 userFromCode() 获取用户
             $user = $oauth->userFromCode($code);
             $openid = $user->getId();
-            Log::info('微信授权成功，openid: ' . $openid);
         } catch (\Exception $e) {
-            Log::error('微信授权失败: ' . $e->getMessage() . ' | code: ' . $code);
-            return redirect()->route('h5.bind')->withErrors(['msg' => '微信授权失败']);
+            return redirect()->route('h5.bind')->withErrors(['msg' => '微信授权失败：' . $e->getMessage()]);
         }
 
         // 查找已绑定该 openid 的员工
@@ -93,6 +82,7 @@ class WechatController extends Controller
 
         // 未绑定，存入 session 后跳转绑定页
         session(['temp_openid' => $openid]);
+
         return redirect()->route('h5.bind');
     }
 
