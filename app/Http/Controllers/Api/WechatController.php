@@ -16,17 +16,36 @@ class WechatController extends Controller
      */
     public function oauth(Request $request)
     {
+        Log::info('=== WechatController@oauth 被调用 ===');
+
+        $appId = config('wechat.official_account.app_id');
+        $secret = config('wechat.official_account.secret');
+        $callbackUrl = url('/wechat/callback');
+
+        Log::info('微信 OAuth 配置', [
+            'app_id' => $appId,
+            'secret' => $secret,
+            'callback' => $callbackUrl,
+        ]);
+
+        if (!$appId || !$secret) {
+            Log::error('微信配置缺失');
+            return '微信公众号配置缺失，请在 .env 中配置 WECHAT_OFFICIAL_ACCOUNT_APP_ID 和 WECHAT_OFFICIAL_ACCOUNT_SECRET';
+        }
+
         $config = [
-            'app_id' => config('wechat.official_account.app_id'),
-            'secret' => config('wechat.official_account.secret'),
+            'app_id' => $appId,
+            'secret' => $secret,
             'oauth' => [
                 'scopes' => ['snsapi_base'],
-                'callback' => url('/wechat/callback'),
+                'callback' => $callbackUrl,
             ],
         ];
 
         $app = new Application($config);
         $oauth = $app->getOAuth();
+
+        Log::info('准备跳转到微信授权页');
 
         return $oauth->redirect();
     }
