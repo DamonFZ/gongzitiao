@@ -20,6 +20,6 @@ Route::post('/h5/bind', [WechatController::class, 'bind']);
 
 // 工资查询（需要 Sanctum 鉴权）
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/salaries', [SalaryController::class, 'index']);
-    Route::get('/salaries/{month}', [SalaryController::class, 'show']);
+    Route::get('/h5/salaries', [SalaryController::class, 'index']);
+    Route::get('/h5/salary/{month}', [SalaryController::class, 'show']);
 });
