@@ -12,6 +12,15 @@ class Authenticate extends Middleware
      */
     protected function redirectTo(Request $request): ?string
     {
-        return $request->expectsJson() ? null : route('login');
+        if ($request->expectsJson()) {
+            return null;
+        }
+
+        // H5 路由未登录时，重定向到微信 OAuth 授权入口
+        if ($request->is('h5*')) {
+            return url('/wechat/oauth');
+        }
+
+        return route('login');
     }
 }
