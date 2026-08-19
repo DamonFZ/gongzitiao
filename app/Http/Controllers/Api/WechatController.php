@@ -36,6 +36,13 @@ class WechatController extends Controller
      */
     public function callback(Request $request)
     {
+        $code = $request->input('code');
+
+        if (!$code) {
+            Log::error('微信授权回调缺少 code 参数');
+            return redirect()->route('h5.bind')->withErrors(['msg' => '微信授权失败，缺少授权码']);
+        }
+
         $config = [
             'app_id' => config('wechat.official_account.app_id'),
             'secret' => config('wechat.official_account.secret'),
@@ -49,10 +56,11 @@ class WechatController extends Controller
         $oauth = $app->getOAuth();
 
         try {
-            $user = $oauth->user();
+            $user = $oauth->userFromCode($code);
             $openid = $user->getId();
+            Log::info('微信授权成功，openid: ' . $openid);
         } catch (\Exception $e) {
-            Log::error('微信授权失败: ' . $e->getMessage());
+            Log::error('微信授权失败: ' . $e->getMessage() . ' | code: ' . $code);
             return redirect()->route('h5.bind')->withErrors(['msg' => '微信授权失败']);
         }
 
