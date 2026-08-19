@@ -89,10 +89,22 @@ class WechatController extends Controller
     /**
      * 显示绑定表单页面
      */
-    public function showBindForm()
+    public function showBindForm(Request $request)
     {
         $employee = Auth::guard('employees')->user();
 
+        // 场景 1：如果用户已登录，且数据库中已经有 openid，说明已经绑定过了，直接返回视图（展示解绑按钮）
+        if ($employee && !empty($employee->openid)) {
+            return view('h5.bind', compact('employee'));
+        }
+
+        // 场景 2：用户未绑定（无论是否已登录）。此时必须确保 Session 中有从微信回调拿到的 temp_openid。
+        // 如果没有 temp_openid，强制重定向到微信授权路由去获取！
+        if (!session()->has('temp_openid')) {
+            return redirect()->route('wechat.oauth');
+        }
+
+        // 场景 3：未绑定，且 Session 中已有 temp_openid，正常展示绑定表单
         return view('h5.bind', compact('employee'));
     }
 
