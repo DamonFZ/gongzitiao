@@ -49,10 +49,19 @@ class EmployeeResource extends Resource
                 Tables\Columns\TextColumn::make('phone')
                     ->label('手机号')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('id_card')
+                    ->label('身份证号')
+                    ->searchable()
+                    ->formatStateUsing(function ($state) {
+                        if (strlen($state) >= 8) {
+                            return substr($state, 0, 4) . '****' . substr($state, -4);
+                        }
+                        return $state;
+                    }),
                 Tables\Columns\IconColumn::make('is_wechat_bound')
                     ->label('已绑定微信')
                     ->boolean()
-                    ->getStateUsing(fn ($record) => !empty($record->openid)),
+                    ->state(fn ($record): bool => !empty($record->openid)),
             ])
             ->filters([
                 //
