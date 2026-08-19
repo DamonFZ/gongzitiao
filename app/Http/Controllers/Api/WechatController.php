@@ -74,7 +74,27 @@ class WechatController extends Controller
      */
     public function showBindForm()
     {
-        return view('h5.bind');
+        $employee = Auth::guard('employees')->user();
+
+        return view('h5.bind', compact('employee'));
+    }
+
+    /**
+     * 解除绑定
+     */
+    public function unbind(Request $request)
+    {
+        $employee = Auth::guard('employees')->user();
+
+        if ($employee) {
+            $employee->update(['openid' => null]);
+        }
+
+        Auth::guard('employees')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('h5.bind');
     }
 
     /**
