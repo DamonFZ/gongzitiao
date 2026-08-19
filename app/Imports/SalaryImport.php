@@ -45,7 +45,7 @@ class SalaryImport implements ToCollection, WithHeadingRow, SkipsEmptyRows, With
 
             // 根据姓名查找员工
             $employee = Employee::where('name', $row['姓名'])->first();
-            
+
             // 如果员工不存在，跳过该行
             if (!$employee) {
                 continue;
@@ -56,16 +56,16 @@ class SalaryImport implements ToCollection, WithHeadingRow, SkipsEmptyRows, With
                 'employee_id' => $employee->id,
                 'month' => $this->cleanString($row['月份'] ?? ''),
                 'department' => $this->cleanString($row['部门'] ?? ''),
-                'position' => $this->cleanString($row['职位'] ?? ''),
+                'position' => $this->cleanString($row['岗位'] ?? ''),
                 'base_salary' => $this->cleanFloat($row['基本工资'] ?? 0),
                 'position_allowance' => $this->cleanFloat($row['岗位津贴'] ?? 0),
                 'overtime_pay' => $this->cleanFloat($row['加班费'] ?? 0),
                 'leave_days' => $this->cleanFloat($row['请假天数'] ?? 0),
-                'deducted_leave_pay' => $this->cleanFloat($row['扣除请假工资'] ?? 0),
-                'payable_salary' => $this->cleanFloat($row['应发工资'] ?? 0),
-                'social_security' => $this->cleanFloat($row['社保'] ?? 0),
-                'income_tax' => $this->cleanFloat($row['个税'] ?? 0),
-                'net_salary' => $this->cleanFloat($row['实发工资'] ?? 0),
+                'deducted_leave_pay' => $this->cleanFloat($row['扣请假工资'] ?? 0),
+                'payable_salary' => $this->cleanFloat($row['应付工资'] ?? 0),
+                'social_security' => $this->cleanFloat($row['社保费'] ?? 0),
+                'income_tax' => $this->cleanFloat($row['个人所得税'] ?? 0),
+                'net_salary' => $this->cleanFloat($row['实收工资'] ?? 0),
             ];
 
             // 创建工资记录
@@ -89,10 +89,10 @@ class SalaryImport implements ToCollection, WithHeadingRow, SkipsEmptyRows, With
         if (empty($value)) {
             return 0.00;
         }
-        
+
         // 移除千分位逗号和空格
         $cleaned = str_replace([',', ' '], '', (string)$value);
-        
+
         return round((float)$cleaned, 2);
     }
 }
