@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use EasyWeChat\OfficialAccount\Application;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class WechatController extends Controller
@@ -20,7 +21,7 @@ class WechatController extends Controller
             'secret' => config('wechat.official_account.secret'),
             'oauth' => [
                 'scopes' => ['snsapi_base'],
-                'callback' => config('app.url') . '/api/wechat/callback',
+                'callback' => url('/wechat/callback'),
             ],
         ];
 
@@ -40,7 +41,7 @@ class WechatController extends Controller
             'secret' => config('wechat.official_account.secret'),
             'oauth' => [
                 'scopes' => ['snsapi_base'],
-                'callback' => config('app.url') . '/api/wechat/callback',
+                'callback' => url('/wechat/callback'),
             ],
         ];
 
@@ -52,29 +53,32 @@ class WechatController extends Controller
             $openid = $user->getId();
         } catch (\Exception $e) {
             Log::error('微信授权失败: ' . $e->getMessage());
-            return response()->json(['message' => '微信授权失败'], 500);
+            return redirect()->route('h5.bind')->withErrors(['msg' => '微信授权失败']);
         }
 
         // 查找已绑定该 openid 的员工
         $employee = Employee::where('openid', $openid)->first();
 
         if ($employee) {
-            $token = $employee->createToken('h5-token')->plainTextToken;
-            return response()->json([
-                'token' => $token,
-                'employee' => $employee,
-            ]);
+            Auth::guard('employees')->login($employee);
+            return redirect()->route('h5.salaries');
         }
 
-        // 未绑定，返回 openid 供前端引导绑定
-        return response()->json([
-            'message' => '未绑定员工，请先绑定',
-            'openid' => $openid,
-        ], 404);
+        // 未绑定，存入 session 后跳转绑定页
+        session(['temp_openid' => $openid]);
+        return redirect()->route('h5.bind');
     }
 
     /**
-     * 绑定员工信息
+     * 显示绑定表单页面
+     */
+    public function showBindForm()
+    {
+        return view('h5.bind');
+    }
+
+    /**
+     * 处理绑定提交
      */
     public function bind(Request $request)
     {
@@ -82,7 +86,6 @@ class WechatController extends Controller
             'name' => 'required|string',
             'phone' => 'required|string',
             'id_card' => 'required|string',
-            'openid' => 'required|string',
         ]);
 
         $employee = Employee::where('name', $request->name)
@@ -91,16 +94,18 @@ class WechatController extends Controller
             ->first();
 
         if (!$employee) {
-            return response()->json(['message' => '员工信息不匹配，请核对姓名、手机号和身份证号'], 422);
+            return back()->withErrors(['msg' => '身份信息不匹配，请核对姓名、手机号和身份证号']);
         }
 
-        $employee->update(['openid' => $request->openid]);
+        // 如果有临时 openid（来自微信授权），则更新
+        $tempOpenid = session('temp_openid');
+        if ($tempOpenid) {
+            $employee->update(['openid' => $tempOpenid]);
+            session()->forget('temp_openid');
+        }
 
-        $token = $employee->createToken('h5-token')->plainTextToken;
+        Auth::guard('employees')->login($employee);
 
-        return response()->json([
-            'token' => $token,
-            'employee' => $employee,
-        ]);
+        return redirect()->route('h5.salaries');
     }
 }
