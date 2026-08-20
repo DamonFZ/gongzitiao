@@ -2,6 +2,14 @@
 
 一套面向企业员工的微信公众号工资条查询与电子签名系统，采用 Laravel 10 + Filament v3 构建，支持 Excel 批量导入、微信 OAuth 绑定、状态流转与电子签名确认。
 
+![img.png](public/img/img.png)
+![img.png](public/img/img2.png)
+![img.png](public/img/img3.png)
+![img_1.png](public/img/img_1.png)
+![img_2.png](public/img/img_2.png)
+![img_3.png](public/img/img_3.png)
+![img_4.png](public/img/img_4.png)
+
 ## 技术栈
 
 | 层级 | 技术 | 版本 |
