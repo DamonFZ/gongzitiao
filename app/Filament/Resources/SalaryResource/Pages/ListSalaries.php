@@ -85,22 +85,44 @@ class ListSalaries extends ListRecords
                         }
                     }
 
-                    // 3. 从表头行的下一行开始读取数据
-                    $nameIdx = $columnMap['姓名'] ?? null;
-                    if ($nameIdx === null) {
+                    // 3. 必需列校验（事前拦截）
+                    $requiredColumns = ['姓名', '应付工资', '实收工资'];
+                    $missingColumns = array_filter($requiredColumns, function ($col) use ($columnMap) {
+                        return !isset($columnMap[$col]);
+                    });
+
+                    if (!empty($missingColumns)) {
                         Notification::make()
-                            ->title('导入失败：表头中未找到"姓名"列')
+                            ->title('导入失败！模板缺少必要的列：' . implode('、', $missingColumns))
                             ->danger()
                             ->send();
                         @unlink($absolutePath);
                         return;
                     }
 
+                    // 4. 安全取值闭包（封装在循环外，避免重复创建）
+                    $safeFloat = function ($val) {
+                        $val = trim((string)$val);
+                        return is_numeric($val) ? floatval($val) : 0;
+                    };
+
+                    $getFloatVal = function ($columnName, $row) use ($columnMap, $safeFloat) {
+                        if (!isset($columnMap[$columnName])) return 0.00;
+                        return $safeFloat($row[$columnMap[$columnName]] ?? 0);
+                    };
+
+                    $getStringVal = function ($columnName, $row) use ($columnMap) {
+                        if (!isset($columnMap[$columnName])) return null;
+                        $idx = $columnMap[$columnName];
+                        return isset($row[$idx]) ? trim((string)$row[$idx]) : null;
+                    };
+
+                    // 5. 从表头行的下一行开始读取数据
                     for ($i = $headerRowIndex + 1; $i < count($allRows); $i++) {
                         $row = $allRows[$i];
 
                         // 提取姓名
-                        $name = trim((string)($row[$nameIdx] ?? ''));
+                        $name = trim((string)($row[$columnMap['姓名']] ?? ''));
                         if (empty($name)) continue;
                         if (str_contains($name, '合计')) continue;
 
@@ -110,9 +132,8 @@ class ListSalaries extends ListRecords
                             // 收集该行的所有原始数据
                             $rowData = [];
                             foreach ($targetColumns as $colName) {
-                                $colIdx = $columnMap[$colName] ?? null;
-                                if ($colIdx !== null) {
-                                    $rowData[$colName] = trim((string)($row[$colIdx] ?? ''));
+                                if (isset($columnMap[$colName])) {
+                                    $rowData[$colName] = trim((string)($row[$columnMap[$colName]] ?? ''));
                                 }
                             }
 
@@ -120,7 +141,7 @@ class ListSalaries extends ListRecords
                             SalaryImportError::create([
                                 'month' => $month,
                                 'name' => $name,
-                                'department' => $rowData['部门'] ?? null,
+                                'department' => $getStringVal('部门', $row),
                                 'row_data' => $rowData,
                                 'error_reason' => '系统内未找到该员工姓名',
                             ]);
@@ -130,27 +151,21 @@ class ListSalaries extends ListRecords
                             continue;
                         }
 
-                        // 安全数值转换辅助函数
-                        $safeFloat = function ($val) {
-                            $val = trim((string)$val);
-                            return is_numeric($val) ? floatval($val) : 0;
-                        };
-
-                        // 利用映射表提取数据
+                        // 利用安全闭包提取数据
                         Salary::create([
                             'employee_id' => $employee->id,
                             'month' => $month,
-                            'department' => isset($columnMap['部门']) ? trim((string)($row[$columnMap['部门']] ?? '')) : null,
-                            'position' => isset($columnMap['岗位']) ? trim((string)($row[$columnMap['岗位']] ?? '')) : null,
-                            'base_salary' => $safeFloat($row[$columnMap['基本工资']] ?? 0),
-                            'position_allowance' => $safeFloat($row[$columnMap['岗位津贴']] ?? 0),
-                            'overtime_pay' => $safeFloat($row[$columnMap['加班费']] ?? 0),
-                            'leave_days' => $safeFloat($row[$columnMap['请假天数']] ?? 0),
-                            'deducted_leave_pay' => $safeFloat($row[$columnMap['扣请假工资']] ?? 0),
-                            'payable_salary' => $safeFloat($row[$columnMap['应付工资']] ?? 0),
-                            'social_security' => $safeFloat($row[$columnMap['社保费']] ?? 0),
-                            'income_tax' => $safeFloat($row[$columnMap['个人所得税']] ?? 0),
-                            'net_salary' => $safeFloat($row[$columnMap['实收工资']] ?? 0),
+                            'department' => $getStringVal('部门', $row),
+                            'position' => $getStringVal('岗位', $row),
+                            'base_salary' => $getFloatVal('基本工资', $row),
+                            'position_allowance' => $getFloatVal('岗位津贴', $row),
+                            'overtime_pay' => $getFloatVal('加班费', $row),
+                            'leave_days' => $getFloatVal('请假天数', $row),
+                            'deducted_leave_pay' => $getFloatVal('扣请假工资', $row),
+                            'payable_salary' => $getFloatVal('应付工资', $row),
+                            'social_security' => $getFloatVal('社保费', $row),
+                            'income_tax' => $getFloatVal('个人所得税', $row),
+                            'net_salary' => $getFloatVal('实收工资', $row),
                         ]);
                         $importedCount++;
                     }
