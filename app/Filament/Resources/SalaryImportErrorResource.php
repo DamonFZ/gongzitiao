@@ -77,8 +77,14 @@ class SalaryImportErrorResource extends Resource
                 Tables\Filters\SelectFilter::make('month')
                     ->label('月份')
                     ->options(SalaryImportError::select('month')->distinct()->pluck('month', 'month')->toArray()),
-                Tables\Filters\TextFilter::make('name')
-                    ->label('员工姓名'),
+                Tables\Filters\Filter::make('name')
+                    ->label('员工姓名')
+                    ->form([
+                        Forms\Components\TextInput::make('name')->label('员工姓名'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query->when($data['name'], fn ($q) => $q->where('name', 'like', '%' . $data['name'] . '%'));
+                    }),
             ])
             ->actions([
                 Tables\Actions\DeleteAction::make(),
