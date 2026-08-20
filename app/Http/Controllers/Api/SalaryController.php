@@ -87,12 +87,47 @@ class SalaryController extends Controller
             return response()->json(['success' => false, 'message' => '签名数据解码失败'], 422);
         }
 
+        // ============ GD 图像处理：逆时针旋转 90 度 ============
+        // 1. 从字符串创建图像资源
+        $sourceImage = @imagecreatefromstring($imageData);
+
+        if ($sourceImage === false) {
+            return response()->json(['success' => false, 'message' => '签名图片解析失败'], 422);
+        }
+
+        // 2. 处理 PNG 透明背景（否则旋转后变黑）
+        imagealphablending($sourceImage, false);
+        imagesavealpha($sourceImage, true);
+        $transparent = imagecolorallocatealpha($sourceImage, 255, 255, 255, 127);
+
+        // 3. 逆时针旋转 90 度（PHP imagerotate 正数表示逆时针）
+        $rotatedImage = imagerotate($sourceImage, 90, $transparent);
+
+        if ($rotatedImage !== false) {
+            imagealphablending($rotatedImage, false);
+            imagesavealpha($rotatedImage, true);
+
+            // 4. 捕获旋转后的图像数据
+            ob_start();
+            imagepng($rotatedImage);
+            $finalImageData = ob_get_clean();
+
+            // 5. 释放内存
+            imagedestroy($rotatedImage);
+        } else {
+            // 旋转失败则使用原图
+            $finalImageData = $imageData;
+        }
+
+        imagedestroy($sourceImage);
+        // ============ GD 图像处理结束 ============
+
         // 生成文件名并保存
         $fileName = "signature_{$id}_" . time() . ".png";
         $savePath = "signatures/{$fileName}";
 
-        // 保存到 storage/app/public/signatures/ 目录
-        Storage::disk('public')->put($savePath, $imageData);
+        // 保存旋转后的图像到 storage/app/public/signatures/ 目录
+        Storage::disk('public')->put($savePath, $finalImageData);
 
         // 更新数据库
         $salary->signature_path = $savePath;

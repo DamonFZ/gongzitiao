@@ -120,7 +120,7 @@ function formatMoney($val) {
             <div class="bg-white rounded-xl shadow-sm p-4">
                 <p class="text-xs text-gray-400 mb-3 text-center">员工签名确认</p>
                 <div class="flex justify-center items-center bg-gray-50 rounded-lg p-4 border border-dashed border-gray-200">
-                    <img src="{{ asset('storage/' . $salary->signature_path) }}" alt="员工签名" class="max-h-32" />
+                    <img src="{{ asset('storage/' . $salary->signature_path) }}" alt="员工签名" class="object-contain max-h-48 mx-auto w-full" />
                 </div>
                 <div class="mt-3 text-center">
                     <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
