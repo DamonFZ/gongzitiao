@@ -22,4 +22,5 @@ Route::middleware('auth:employees')->group(function () {
     Route::get('/h5', fn () => redirect()->route('h5.salaries'));
     Route::get('/h5/salaries', [SalaryController::class, 'index'])->name('h5.salaries');
     Route::get('/h5/salary/{month}', [SalaryController::class, 'show'])->name('h5.salary.detail');
+    Route::post('/h5/salary/{id}/sign', [SalaryController::class, 'sign'])->name('h5.salary.sign');
 });

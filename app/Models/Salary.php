@@ -23,6 +23,8 @@ class Salary extends Model
         'social_security',
         'income_tax',
         'net_salary',
+        'status',
+        'signature_path',
     ];
 
     public function employee()
