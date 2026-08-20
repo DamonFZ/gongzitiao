@@ -4,11 +4,11 @@
 
 ![img.png](public/img/img.png)
 ![img.png](public/img/img2.png)
-![img.png](public/img/img3.png)
-![img_1.png](public/img/img_1.png)
-![img_2.png](public/img/img_2.png)
-![img_3.png](public/img/img_3.png)
-![img_4.png](public/img/img_4.png)
+<img src="public/img/img3.png" alt="演示图" width="200" />
+<img src="public/img/img_1.png" alt="演示图" width="200" />
+<img src="public/img/img_2.png" alt="演示图" width="200" />
+<img src="public/img/img_3.png" alt="演示图" width="200" />
+<img src="public/img/img_4.png" alt="演示图" width="200" />
 
 ## 技术栈
 
