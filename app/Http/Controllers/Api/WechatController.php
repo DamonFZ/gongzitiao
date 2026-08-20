@@ -150,6 +150,13 @@ class WechatController extends Controller
             return back()->withErrors(['msg' => '身份信息不匹配，请核对姓名、手机号和身份证号']);
         }
 
+        // 互斥锁：如果该员工已经被绑定过了，直接拦截，防止他人顶替绑定偷窥工资
+        if (!empty($employee->openid)) {
+            return back()->withInput()->withErrors([
+                'msg' => '安全提示：该员工信息已被其他微信号绑定！为了保护您的隐私，如需换绑，请联系管理员在后台解除原有绑定。'
+            ]);
+        }
+
         // 如果有临时 openid（来自微信授权），则更新
         $tempOpenid = session('temp_openid');
         if ($tempOpenid) {
