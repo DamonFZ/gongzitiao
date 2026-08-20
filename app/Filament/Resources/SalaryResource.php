@@ -93,7 +93,9 @@ class SalaryResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('month')
+                    ->label('月份')
+                    ->options(Salary::select('month')->distinct()->pluck('month', 'month')->toArray()),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

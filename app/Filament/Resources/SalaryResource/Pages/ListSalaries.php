@@ -5,6 +5,7 @@ namespace App\Filament\Resources\SalaryResource\Pages;
 use App\Filament\Resources\SalaryResource;
 use App\Models\Employee;
 use App\Models\Salary;
+use App\Models\SalaryImportError;
 use Filament\Actions;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
@@ -106,7 +107,25 @@ class ListSalaries extends ListRecords
                         // 查找员工
                         $employee = Employee::where('name', $name)->first();
                         if (!$employee) {
-                            Log::warning("工资导入跳过：找不到员工 [{$name}]");
+                            // 收集该行的所有原始数据
+                            $rowData = [];
+                            foreach ($targetColumns as $colName) {
+                                $colIdx = $columnMap[$colName] ?? null;
+                                if ($colIdx !== null) {
+                                    $rowData[$colName] = trim((string)($row[$colIdx] ?? ''));
+                                }
+                            }
+
+                            // 写入导入失败记录池
+                            SalaryImportError::create([
+                                'month' => $month,
+                                'name' => $name,
+                                'department' => $rowData['部门'] ?? null,
+                                'row_data' => $rowData,
+                                'error_reason' => '系统内未找到该员工姓名',
+                            ]);
+
+                            Log::warning("工资导入跳过：找不到员工 [{$name}]，已记录到失败池");
                             $skippedCount++;
                             continue;
                         }
@@ -140,7 +159,7 @@ class ListSalaries extends ListRecords
 
                     $message = "导入完成，成功 {$importedCount} 条记录。";
                     if ($skippedCount > 0) {
-                        $message .= " 跳过 {$skippedCount} 条(员工库未找到)。";
+                        $message .= " 跳过 {$skippedCount} 条(员工库未找到，已记录至[导入失败记录]池)。";
                     }
 
                     Notification::make()

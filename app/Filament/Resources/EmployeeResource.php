@@ -76,6 +76,16 @@ class EmployeeResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('unbindWechat')
+                    ->label('解绑微信')
+                    ->color('danger')
+                    ->icon('heroicon-o-link-slash')
+                    ->requiresConfirmation()
+                    ->action(function (Employee $record) {
+                        $record->openid = null;
+                        $record->save();
+                    })
+                    ->visible(fn (Employee $record) => !empty($record->openid)),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
