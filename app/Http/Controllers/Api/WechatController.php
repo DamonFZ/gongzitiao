@@ -34,9 +34,13 @@ class WechatController extends Controller
 
         $app = new Application($config);
         $oauth = $app->getOAuth();
+        // 生成回调 URL
+        $callbackUrl = url('/wechat/callback');
+        $url = $oauth->redirect($callbackUrl);
+
 
         // EasyWeChat v6 的 redirect() 返回 URL 字符串，需要用 redirect()->away() 包装
-        $url = $oauth->redirect();
+//        $url = $oauth->redirect($url);
 
         return redirect()->away($url);
     }
