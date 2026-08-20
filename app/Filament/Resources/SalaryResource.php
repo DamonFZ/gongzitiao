@@ -91,11 +91,40 @@ class SalaryResource extends Resource
                     ->label('实收工资')
                     ->money('CNY')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('status')
+                    ->label('签名状态')
+                    ->badge()
+                    ->formatStateUsing(fn (int $state): string => match ($state) {
+                        0 => '未读',
+                        1 => '已读·待签名',
+                        2 => '已签名',
+                        default => '未知',
+                    })
+                    ->color(fn (int $state): string => match ($state) {
+                        0 => 'danger',
+                        1 => 'warning',
+                        2 => 'success',
+                        default => 'gray',
+                    })
+                    ->sortable(),
+                Tables\Columns\ImageColumn::make('signature_path')
+                    ->label('签名预览')
+                    ->circular()
+                    ->getStateUsing(fn ($record) => $record->signature_path ? asset('storage/' . $record->signature_path) : null)
+                    ->visible(fn ($record) => !empty($record->signature_path))
+                    ->toggleable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('month')
                     ->label('月份')
                     ->options(Salary::select('month')->distinct()->pluck('month', 'month')->toArray()),
+                Tables\Filters\SelectFilter::make('status')
+                    ->label('签名状态')
+                    ->options([
+                        0 => '未读',
+                        1 => '已读·待签名',
+                        2 => '已签名',
+                    ]),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
