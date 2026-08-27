@@ -16,9 +16,10 @@ class Authenticate extends Middleware
             return null;
         }
 
-        // H5 路由未登录时，重定向到微信 OAuth 授权入口
+        // H5 路由未登录时，重定向到 OAuth 网关
         if (str_starts_with($request->path(), 'h5')) {
-            return route('wechat.oauth');
+            $gatewayUrl = config('wechat.gateway', 'http://oauth.damon.com');
+            return $gatewayUrl . '/auth/redirect?target_url=' . urlencode($request->fullUrl());
         }
 
         return route('login');
