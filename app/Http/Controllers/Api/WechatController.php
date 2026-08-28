@@ -103,9 +103,10 @@ class WechatController extends Controller
         }
 
         // 场景 2：用户未绑定（无论是否已登录）。此时必须确保 Session 中有从微信回调拿到的 temp_openid。
-        // 如果没有 temp_openid，强制重定向到微信授权路由去获取！
+        // 如果没有 temp_openid，重定向到 OAuth 网关获取
         if (!session()->has('temp_openid')) {
-            return redirect()->route('wechat.oauth');
+            $gatewayUrl = config('wechat.gateway', 'http://oauth.damon.com');
+            return redirect($gatewayUrl . '/auth/redirect?target_url=' . urlencode($request->fullUrl()));
         }
 
         // 场景 3：未绑定，且 Session 中已有 temp_openid，正常展示绑定表单

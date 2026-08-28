@@ -4,11 +4,7 @@ use App\Http\Controllers\Api\SalaryController;
 use App\Http\Controllers\Api\WechatController;
 use Illuminate\Support\Facades\Route;
 
-// 微信授权（无需鉴权）
-Route::get('/wechat/oauth', [WechatController::class, 'oauth'])->name('wechat.oauth');
-Route::get('/wechat/callback', [WechatController::class, 'callback'])->name('wechat.callback');
-
-// 绑定页面（无需鉴权）
+// 绑定页面（无需鉴权，showBindForm 内部处理网关跳转）
 Route::get('/h5/bind', [WechatController::class, 'showBindForm'])->name('h5.bind');
 Route::post('/h5/bind', [WechatController::class, 'bind']);
 
