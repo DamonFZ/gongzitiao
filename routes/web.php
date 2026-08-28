@@ -4,9 +4,12 @@ use App\Http\Controllers\Api\SalaryController;
 use App\Http\Controllers\Api\WechatController;
 use Illuminate\Support\Facades\Route;
 
-// 绑定页面（无需鉴权，showBindForm 内部处理网关跳转）
+// 绑定页面（无需鉴权，直接显示表单）
 Route::get('/h5/bind', [WechatController::class, 'showBindForm'])->name('h5.bind');
 Route::post('/h5/bind', [WechatController::class, 'bind']);
+
+// 网关 OAuth 回调处理（接收 ticket 并完成绑定）
+Route::get('/h5/oauth-callback', [WechatController::class, 'handleOAuthCallback'])->name('h5.oauth.callback');
 
 // 解绑（需要登录）
 Route::middleware('auth:employees')->group(function () {

@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 // 微信授权（无需鉴权）
-Route::get('/wechat/oauth', [WechatController::class, 'oauth']);
-Route::get('/wechat/callback', [WechatController::class, 'callback']);
+// 网关 OAuth 回调处理（接收 ticket 并完成绑定）
+Route::get('/h5/oauth-callback', [WechatController::class, 'handleOAuthCallback']);
 
 // 绑定员工（无需鉴权）
 Route::post('/h5/bind', [WechatController::class, 'bind']);
